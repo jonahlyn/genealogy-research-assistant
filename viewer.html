@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Genealogy Research Assistant</title>
+  <style>
+    body { margin: 12px; font-family: serif; }
+  </style>
+</head>
+<body>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get("content");
+    if (encoded) {
+      try {
+        const html = decodeURIComponent(atob(encoded).split("").map(function(c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(""));
+        document.body.innerHTML = html;
+      } catch(e) {
+        document.body.innerHTML = "<p style='color:red;'>Failed to render content: " + e.message + "</p>";
+      }
+    } else {
+      document.body.innerHTML = "<p style='color:#888;'>No content provided.</p>";
+    }
+  </script>
+</body>
+</html>

@@ -216,8 +216,11 @@ function exportGedcom(data) {
 // ---------------------------------------------------------------------------
 
 function webviewResult(html) {
-  const page = "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head><body style='margin:12px;'>" + html + "</body></html>";
-  return { webview: { iframe: true, url: "data:text/html;charset=utf-8," + encodeURIComponent(page) } };
+  const encoded = btoa(encodeURIComponent(html).replace(/%([0-9A-F]{2})/g, function(m, p) {
+    return String.fromCharCode("0x" + p);
+  }));
+  const url = "https://jonahlyn.github.io/genealogy-research-assistant/viewer.html?content=" + encoded;
+  return { webview: { iframe: true, url: url } };
 }
 
 // ---------------------------------------------------------------------------
