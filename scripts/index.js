@@ -212,6 +212,15 @@ function exportGedcom(data) {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function webviewResult(html) {
+  const page = "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head><body style='margin:12px;'>" + html + "</body></html>";
+  return { webview: { iframe: true, url: "data:text/html;charset=utf-8," + encodeURIComponent(page) } };
+}
+
+// ---------------------------------------------------------------------------
 // Entry point — required by AI Edge Gallery
 // ---------------------------------------------------------------------------
 
@@ -221,15 +230,15 @@ window.ai_edge_gallery_get_result = async function(dataStr, secret) {
     const action = data.action;
 
     switch (action) {
-      case "record_person":   return JSON.stringify(recordPerson(data));
-      case "family_group":    return JSON.stringify(familyGroup(data));
-      case "format_citation": return JSON.stringify(formatCitation(data));
-      case "research_log":    return JSON.stringify(researchLog(data));
-      case "export_gedcom":   return JSON.stringify(exportGedcom(data));
+      case "record_person":   return JSON.stringify(webviewResult(recordPerson(data).result));
+      case "family_group":    return JSON.stringify(webviewResult(familyGroup(data).result));
+      case "format_citation": return JSON.stringify(webviewResult(formatCitation(data).result));
+      case "research_log":    return JSON.stringify(webviewResult(researchLog(data).result));
+      case "export_gedcom":   return JSON.stringify(webviewResult(exportGedcom(data).result));
       default:
-        return JSON.stringify({ result: "<p style='color:#a00;font-family:sans-serif;'>Unknown action: " + escapeHtml(action) + "</p>" });
+        return JSON.stringify(webviewResult("<p style='color:#a00;font-family:sans-serif;'>Unknown action: " + escapeHtml(action) + "</p>"));
     }
   } catch(e) {
-    return JSON.stringify({ result: "<div style='font-family:sans-serif;border:1px solid #c00;padding:10px;background:#fff5f5;'><strong>Error:</strong> " + escapeHtml(e.message) + "</div>" });
+    return JSON.stringify(webviewResult("<div style='font-family:sans-serif;border:1px solid #c00;padding:10px;background:#fff5f5;'><strong>Error:</strong> " + escapeHtml(e.message) + "</div>"));
   }
 };
