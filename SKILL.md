@@ -6,7 +6,7 @@ metadata:
   homepage: https://github.com/jonahlyn/genealogy-research-assistant
 ---
 
-# Genealogy Research Assistant
+# Genealogy Research Assistant v1.0.0
 
 ## Persona
 
