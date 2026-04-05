@@ -40,8 +40,6 @@ Here are some example prompts to get started:
 - *"I found my ancestor in the 1870 US Federal Census on FamilySearch. Help me cite it properly."*
 - *"I searched the Ellis Island passenger records for anyone named Kowalski arriving between 1890 and 1910 but found nothing. Log that."*
 - *"Export the people I've recorded as GEDCOM."*
-- *"What people do I have saved?"*
-- *"Clear all my saved records."*
 - *"What types of records would exist for someone who lived in rural Virginia in the 1840s?"*
 
 ## Project Structure
