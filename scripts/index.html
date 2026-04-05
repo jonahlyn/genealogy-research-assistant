@@ -81,7 +81,7 @@ async function getAccessToken(creds) {
 async function findFileId(accessToken) {
   const q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
   const resp = await fetch(
-    "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=" + q,
+    "https://www.googleapis.com/drive/v3/files?spaces=drive&q=" + q,
     { headers: { Authorization: "Bearer " + accessToken } }
   );
   const json = await resp.json();
@@ -110,7 +110,7 @@ async function writeDriveData(accessToken, data) {
       "--" + boundary,
       "Content-Type: application/json",
       "",
-      JSON.stringify({ name: DRIVE_FILE_NAME, parents: ["appDataFolder"] }),
+      JSON.stringify({ name: DRIVE_FILE_NAME }),
       "--" + boundary,
       "Content-Type: application/json",
       "",
@@ -118,7 +118,7 @@ async function writeDriveData(accessToken, data) {
       "--" + boundary + "--"
     ].join("\r\n");
     const resp = await fetch(
-      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
       {
         method: "POST",
         headers: {

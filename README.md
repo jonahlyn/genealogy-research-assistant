@@ -50,7 +50,7 @@ This skill saves your data to Google Drive. You'll need to provide OAuth credent
 1. Go to [developers.google.com/oauthplayground](https://developers.google.com/oauthplayground).
 2. Click the gear icon (top right) → check **Use your own OAuth credentials** → enter your Client ID and Client secret.
 3. In the left panel, find **Drive API v3** and select the scope:
-   `https://www.googleapis.com/auth/drive.appdata`
+   `https://www.googleapis.com/auth/drive.file`
 4. Click **Authorize APIs** and sign in with your Google account.
 5. Click **Exchange authorization code for tokens**.
 6. Copy the **Refresh token**.
