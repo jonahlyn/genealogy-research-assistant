@@ -2,7 +2,7 @@
 name: genealogy-research-assistant
 description: A genealogy research assistant that helps users document ancestors, format source citations, build family group sheets, create research logs, and generate GEDCOM data. Use when the user asks about family history, ancestors, genealogy records, vital records, census data, immigration, or building a family tree.
 metadata:
-  homepage: https://github.com/anthropic-user/genealogy-research-assistant
+  homepage: https://github.com/jonahlyn/genealogy-research-assistant
 ---
 
 # Genealogy Research Assistant

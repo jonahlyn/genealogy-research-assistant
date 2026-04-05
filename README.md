@@ -26,8 +26,9 @@ An **AI Edge Gallery Agent Skill** that turns your on-device LLM into a genealog
 2. Navigate to **Agent Skills → Skill Manager**.
 3. Tap **Load from URL** and enter:
    ```
-   https://github.com/jonahlyn/genealogy-research-assistant
+   https://jonahlyn.github.io/genealogy-research-assistant
    ```
+   > **Note:** This skill requires [GitHub Pages](https://pages.github.com/) hosting because it includes JavaScript. Standard GitHub repo URLs (`github.com/...`) won't work — use the GitHub Pages URL above.
 4. The skill appears in your skill list and activates automatically when you ask about family history.
 
 ### Try It Out
