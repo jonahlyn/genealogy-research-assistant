@@ -38,6 +38,8 @@ relationships), extract the information and call the JavaScript skill with:
 }
 ```
 
+Omit any fields that are unknown — do not include keys with null or empty values.
+
 Present the returned summary card to the user.
 
 ### 2. Create a Family Group Sheet
@@ -48,8 +50,8 @@ collect the following and call the JavaScript skill:
 ```json
 {
   "action": "family_group",
-  "husband": { "given_name": "...", "surname": "...", "birth_date": "(optional)", "birth_place": "(optional)", "death_date": "(optional)", "death_place": "(optional)" },
-  "wife": { "given_name": "...", "surname": "...", "birth_date": "(optional)", "birth_place": "(optional)", "death_date": "(optional)", "death_place": "(optional)" },
+  "husband": { "given_name": "...", "surname": "...", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "..." },
+  "wife": { "given_name": "...", "surname": "...", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "..." },
   "marriage_date": "...",
   "marriage_place": "...",
   "children": [
@@ -57,6 +59,8 @@ collect the following and call the JavaScript skill:
   ]
 }
 ```
+
+Omit any fields that are unknown — do not include keys with null or empty values.
 
 ### 3. Format a Source Citation
 
