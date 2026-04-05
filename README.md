@@ -1,6 +1,8 @@
 # Genealogy Research Assistant
 
-An **AI Edge Gallery Agent Skill** that turns your on-device LLM into a genealogy research companion. Built for the [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) app, it runs entirely on your phone — no cloud, no account, complete privacy for your family data.
+> **Note:** This project is for experimentation purposes only, built to explore the capabilities of the [Google AI Edge Gallery](https://github.com/google-ai-edge/gallery) app and its Agent Skills platform.
+
+An **AI Edge Gallery Agent Skill** that turns your on-device LLM into a genealogy research companion. It runs entirely on your phone — no cloud, no account, complete privacy for your family data.
 
 ## What It Does
 
@@ -42,23 +44,31 @@ Here are some example prompts to get started:
 - *"Export the people I've recorded as GEDCOM."*
 - *"What types of records would exist for someone who lived in rural Virginia in the 1840s?"*
 
+## Limitations
+
+- **No persistent storage.** Data exists only within the current conversation session. Once you close the chat, recorded people and families are lost. For GEDCOM export, the LLM reconstructs records from conversation history — start a fresh export before ending a session.
+- **LLM accuracy.** Dates and names are extracted by the on-device model and may occasionally contain errors. Always verify the rendered card against what you entered.
+
 ## Project Structure
 
 ```
 genealogy-research-assistant/
 ├── SKILL.md              # Skill definition (frontmatter + LLM instructions)
+├── viewer.html           # Renders HTML cards in the app's webview
 ├── scripts/
-│   └── index.html        # JavaScript skill logic (runs in webview)
+│   ├── index.html        # Webview entry point (loads index.js)
+│   └── index.js          # JavaScript skill logic
 ├── LICENSE               # Apache 2.0
 └── README.md             # This file
 ```
 
 ## How It Works
 
-The skill has two layers:
+The skill has three layers:
 
-1. **SKILL.md** provides the LLM with a genealogist persona and instructions for when and how to call the JavaScript functions.
-2. **scripts/index.html** contains pure JavaScript that runs inside a sandboxed webview on the device. It generates formatted HTML cards, properly structured citations, and valid GEDCOM output — all without any network calls.
+1. **SKILL.md** provides the LLM with a genealogist persona and instructs it to call `run_js` with specific JSON payloads for each action.
+2. **scripts/index.js** receives the JSON, generates formatted HTML, and returns a `webview` response pointing to `viewer.html`.
+3. **viewer.html** is loaded in the app's inline webview and decodes the base64-encoded HTML content from the URL parameter, rendering the final card.
 
 Because everything runs on-device, your family data never leaves your phone.
 
