@@ -426,6 +426,21 @@ window.ai_edge_gallery_get_result = async function(dataStr, secret) {
     // These actions don't need Drive
     if (action === "format_citation") return JSON.stringify(formatCitation(data));
     if (action === "research_log")    return JSON.stringify(researchLog(data));
+    if (action === "diagnose") {
+      const hasSecret = !!secret && secret.trim().length > 0;
+      let parsed = null;
+      let parseError = null;
+      try { parsed = JSON.parse(secret); } catch(e) { parseError = e.message; }
+      const html = "<div style='font-family:monospace;font-size:12px;border:1px solid #888;padding:10px;max-width:480px;'>"
+        + "<p><strong>secret present:</strong> " + hasSecret + "</p>"
+        + "<p><strong>secret length:</strong> " + (secret ? secret.length : 0) + "</p>"
+        + "<p><strong>parse error:</strong> " + escapeHtml(parseError || "none") + "</p>"
+        + "<p><strong>has client_id:</strong> " + (parsed ? !!parsed.client_id : false) + "</p>"
+        + "<p><strong>has client_secret:</strong> " + (parsed ? !!parsed.client_secret : false) + "</p>"
+        + "<p><strong>has refresh_token:</strong> " + (parsed ? !!parsed.refresh_token : false) + "</p>"
+        + "</div>";
+      return JSON.stringify({ result: html });
+    }
 
     // All other actions require Drive credentials
     const creds       = parseSecret(secret);

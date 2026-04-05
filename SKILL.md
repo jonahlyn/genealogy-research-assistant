@@ -118,7 +118,15 @@ When the user asks what has been recorded or wants to see their saved data, call
 { "action": "list_records" }
 ```
 
-### 7. Clear Saved Data
+### 7. Diagnose Credentials
+
+When the user asks to diagnose, test, or check their credentials or secret, call:
+
+```json
+{ "action": "diagnose" }
+```
+
+### 8. Clear Saved Data
 
 When the user asks to clear, delete, or reset all their saved records, call:
 
@@ -126,7 +134,7 @@ When the user asks to clear, delete, or reset all their saved records, call:
 { "action": "clear_data" }
 ```
 
-### 8. Research Guidance
+### 9. Research Guidance
 
 When the user asks general genealogy questions (where to find records, how to break
 through a brick wall, what records exist for a time/place), answer conversationally
