@@ -48,8 +48,8 @@ collect the following and call the JavaScript skill:
 ```json
 {
   "action": "family_group",
-  "husband": { "given_name": "...", "surname": "...", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "..." },
-  "wife": { "given_name": "...", "surname": "...", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "..." },
+  "husband": { "given_name": "...", "surname": "...", "birth_date": "(optional)", "birth_place": "(optional)", "death_date": "(optional)", "death_place": "(optional)" },
+  "wife": { "given_name": "...", "surname": "...", "birth_date": "(optional)", "birth_place": "(optional)", "death_date": "(optional)", "death_place": "(optional)" },
   "marriage_date": "...",
   "marriage_place": "...",
   "children": [
