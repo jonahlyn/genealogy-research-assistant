@@ -39,7 +39,6 @@ Here are some example prompts to get started:
 - *"Create a family group sheet for John Smith and Jane Doe, married 12 June 1910 in Chicago. Their children were Robert (b. 1911), Dorothy (b. 1914), and William (b. 1918)."*
 - *"I found my ancestor in the 1870 US Federal Census on FamilySearch. Help me cite it properly."*
 - *"I searched the Ellis Island passenger records for anyone named Kowalski arriving between 1890 and 1910 but found nothing. Log that."*
-- *"What people do I have saved?"*
 - *"Export the people I've recorded as GEDCOM."*
 - *"What types of records would exist for someone who lived in rural Virginia in the 1840s?"*
 
