@@ -43,7 +43,7 @@ call the `run_js` tool with:
 
 - script name: `index.html`
 - data: a JSON string with the following fields:
-  - action: `family_group`
+  - action: `family_group` (important: use exactly this value, not "family_group_sheet")
   - husband: object with given_name, surname, and optionally birth_date, birth_place, death_date, death_place
   - wife: object with given_name, surname, and optionally birth_date, birth_place, death_date, death_place
   - marriage_date: in DD Mon YYYY format

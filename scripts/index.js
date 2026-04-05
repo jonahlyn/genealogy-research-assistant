@@ -234,7 +234,8 @@ window.ai_edge_gallery_get_result = async function(dataStr, secret) {
 
     switch (action) {
       case "record_person":   return JSON.stringify(webviewResult(recordPerson(data).result));
-      case "family_group":    return JSON.stringify(webviewResult(familyGroup(data).result));
+      case "family_group":
+      case "family_group_sheet": return JSON.stringify(webviewResult(familyGroup(data).result));
       case "format_citation": return JSON.stringify(webviewResult(formatCitation(data).result));
       case "research_log":    return JSON.stringify(webviewResult(researchLog(data).result));
       case "export_gedcom":   return JSON.stringify(webviewResult(exportGedcom(data).result));
