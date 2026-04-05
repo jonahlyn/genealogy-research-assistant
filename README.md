@@ -31,38 +31,6 @@ An **AI Edge Gallery Agent Skill** that turns your on-device LLM into a genealog
    > **Note:** This skill requires [GitHub Pages](https://pages.github.com/) hosting because it includes JavaScript. Standard GitHub repo URLs (`github.com/...`) won't work — use the GitHub Pages URL above.
 4. The skill appears in your skill list and activates automatically when you ask about family history.
 
-### Set Up Google Drive Storage
-
-This skill saves your data to Google Drive. You'll need to provide OAuth credentials as the skill secret. This is a one-time setup.
-
-**Step 1 — Create a Google Cloud project and OAuth credentials**
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com) and create a new project.
-2. Go to **APIs & Services → Library**, search for **Google Drive API**, and enable it.
-3. Go to **APIs & Services → OAuth consent screen**. Choose **External**, fill in an app name (e.g. "Genealogy Skill"), and add your Google account as a test user.
-4. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
-   - Application type: **Desktop app**
-   - Give it a name and click **Create**.
-5. Copy the **Client ID** and **Client secret** shown.
-
-**Step 2 — Get a refresh token**
-
-1. Go to [developers.google.com/oauthplayground](https://developers.google.com/oauthplayground).
-2. Click the gear icon (top right) → check **Use your own OAuth credentials** → enter your Client ID and Client secret.
-3. In the left panel, find **Drive API v3** and select the scope:
-   `https://www.googleapis.com/auth/drive.file`
-4. Click **Authorize APIs** and sign in with your Google account.
-5. Click **Exchange authorization code for tokens**.
-6. Copy the **Refresh token**.
-
-**Step 3 — Enter the secret in the app**
-
-In the AI Edge Gallery skill settings, paste your credentials as a single JSON object:
-
-```json
-{"client_id":"YOUR_CLIENT_ID","client_secret":"YOUR_CLIENT_SECRET","refresh_token":"YOUR_REFRESH_TOKEN"}
-```
-
 ### Try It Out
 
 Here are some example prompts to get started:

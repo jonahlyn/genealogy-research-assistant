@@ -6,8 +6,240 @@
 </head>
 <body>
 <script>
+/**
+ * Genealogy Research Assistant — AI Edge Gallery JavaScript Skill
+ *
+ * Handles structured genealogy data: person records, family group sheets,
+ * source citations, research logs, and GEDCOM export.
+ */
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function formatDate(raw) {
+  if (!raw) return "";
+  if (/^\d{1,2}\s[A-Za-z]{3}\s\d{4}$/.test(raw.trim())) return raw.trim();
+  const months = ["Jan","Feb","Mar","Apr","May","Jun",
+                  "Jul","Aug","Sep","Oct","Nov","Dec"];
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function gedcomDate(raw) {
+  if (!raw) return "";
+  return formatDate(raw).toUpperCase();
+}
+
+// ---------------------------------------------------------------------------
+// Actions
+// ---------------------------------------------------------------------------
+
+function recordPerson(data) {
+  const name = (data.given_name || "") + " " + (data.surname || "");
+  let html = "<div style='font-family:serif;border:1px solid #888;padding:12px;max-width:400px;'>";
+  html += "<h3 style='margin:0 0 8px 0;border-bottom:2px solid #333;padding-bottom:4px;'>" + escapeHtml(name.trim()) + "</h3>";
+  html += "<table style='font-size:14px;width:100%;'>";
+  if (data.birth_date || data.birth_place) {
+    html += "<tr><td style='font-weight:bold;width:80px;'>Born:</td><td>" + escapeHtml(formatDate(data.birth_date));
+    if (data.birth_place) html += " — " + escapeHtml(data.birth_place);
+    html += "</td></tr>";
+  }
+  if (data.death_date || data.death_place) {
+    html += "<tr><td style='font-weight:bold;'>Died:</td><td>" + escapeHtml(formatDate(data.death_date));
+    if (data.death_place) html += " — " + escapeHtml(data.death_place);
+    html += "</td></tr>";
+  }
+  if (data.gender) {
+    const g = data.gender === "M" ? "Male" : data.gender === "F" ? "Female" : "Unknown";
+    html += "<tr><td style='font-weight:bold;'>Gender:</td><td>" + g + "</td></tr>";
+  }
+  if (data.notes) {
+    html += "<tr><td style='font-weight:bold;'>Notes:</td><td>" + escapeHtml(data.notes) + "</td></tr>";
+  }
+  html += "</table></div>";
+  return { result: html };
+}
+
+function familyGroup(data) {
+  let html = "<div style='font-family:serif;border:2px solid #444;padding:14px;max-width:520px;'>";
+  html += "<h2 style='text-align:center;margin:0 0 10px 0;'>Family Group Sheet</h2>";
+
+  function personBlock(label, p) {
+    if (!p) return "";
+    let s = "<h4 style='margin:8px 0 4px 0;border-bottom:1px solid #aaa;'>" + label + "</h4>";
+    s += "<table style='font-size:13px;width:100%;'>";
+    s += "<tr><td style='font-weight:bold;width:80px;'>Name:</td><td>" + escapeHtml((p.given_name||"") + " " + (p.surname||"")) + "</td></tr>";
+    if (p.birth_date) s += "<tr><td style='font-weight:bold;'>Born:</td><td>" + escapeHtml(formatDate(p.birth_date)) + (p.birth_place ? " — " + escapeHtml(p.birth_place) : "") + "</td></tr>";
+    if (p.death_date) s += "<tr><td style='font-weight:bold;'>Died:</td><td>" + escapeHtml(formatDate(p.death_date)) + (p.death_place ? " — " + escapeHtml(p.death_place) : "") + "</td></tr>";
+    s += "</table>";
+    return s;
+  }
+
+  html += personBlock("Husband", data.husband);
+  html += personBlock("Wife", data.wife);
+
+  if (data.marriage_date || data.marriage_place) {
+    html += "<p style='font-size:13px;'><strong>Marriage:</strong> " + escapeHtml(formatDate(data.marriage_date));
+    if (data.marriage_place) html += " — " + escapeHtml(data.marriage_place);
+    html += "</p>";
+  }
+
+  if (data.children && data.children.length > 0) {
+    html += "<h4 style='margin:10px 0 4px 0;border-bottom:1px solid #aaa;'>Children</h4>";
+    html += "<ol style='font-size:13px;margin:4px 0;'>";
+    data.children.forEach(function(c) {
+      html += "<li>" + escapeHtml((c.given_name||"") + " " + (c.surname||""));
+      if (c.birth_date) html += " — b. " + escapeHtml(formatDate(c.birth_date));
+      if (c.gender) html += " (" + (c.gender === "M" ? "Male" : c.gender === "F" ? "Female" : c.gender) + ")";
+      html += "</li>";
+    });
+    html += "</ol>";
+  }
+
+  html += "</div>";
+  return { result: html };
+}
+
+function formatCitation(data) {
+  let parts = [];
+  if (data.author)           parts.push(escapeHtml(data.author));
+  if (data.title)            parts.push('"' + escapeHtml(data.title) + '"');
+  if (data.publication_info) parts.push(escapeHtml(data.publication_info));
+  if (data.specific_item)    parts.push(escapeHtml(data.specific_item));
+  if (data.repository)       parts.push(escapeHtml(data.repository));
+  if (data.url)              parts.push(escapeHtml(data.url));
+  if (data.date_accessed)    parts.push("accessed " + escapeHtml(formatDate(data.date_accessed)));
+
+  const citation  = parts.join("; ") + ".";
+  const typeLabel = (data.source_type || "source").replace(/_/g, " ");
+
+  let html = "<div style='font-family:serif;border-left:4px solid #555;padding:8px 12px;max-width:500px;background:#fafaf5;'>";
+  html += "<p style='margin:0 0 4px 0;font-size:11px;text-transform:uppercase;color:#666;'>" + escapeHtml(typeLabel) + "</p>";
+  html += "<p style='margin:0;font-size:14px;'>" + citation + "</p>";
+  html += "</div>";
+  return { result: html };
+}
+
+function researchLog(data) {
+  let html = "<div style='font-family:sans-serif;border:1px solid #bbb;padding:10px;max-width:500px;background:#fffff8;'>";
+  html += "<h4 style='margin:0 0 6px 0;'>Research Log Entry</h4>";
+  html += "<table style='font-size:13px;width:100%;border-collapse:collapse;'>";
+  const rows = [
+    ["Date",                data.date],
+    ["Ancestor",            data.ancestor],
+    ["Repository / Source", data.repository_or_source],
+    ["Search Description",  data.description],
+    ["Results",             data.results],
+    ["Next Steps",          data.next_steps]
+  ];
+  rows.forEach(function(r) {
+    if (r[1]) {
+      html += "<tr><td style='font-weight:bold;vertical-align:top;padding:3px 8px 3px 0;width:130px;border-bottom:1px dotted #ddd;'>" + r[0] + "</td>";
+      html += "<td style='padding:3px 0;border-bottom:1px dotted #ddd;'>" + escapeHtml(r[1]) + "</td></tr>";
+    }
+  });
+  html += "</table></div>";
+  return { result: html };
+}
+
+function exportGedcom(data) {
+  const people   = data.people   || [];
+  const families = data.families || [];
+
+  if (people.length === 0) {
+    return { result: "<p style='font-family:sans-serif;color:#a00;'>No people provided. Please list the people to export.</p>" };
+  }
+
+  let lines = [];
+  lines.push("0 HEAD");
+  lines.push("1 SOUR AI_Edge_Genealogy_Skill");
+  lines.push("1 GEDC");
+  lines.push("2 VERS 5.5.1");
+  lines.push("2 FORM LINEAGE-LINKED");
+  lines.push("1 CHAR UTF-8");
+
+  let personId = 1;
+  let familyId = 1;
+  const idMap  = {};
+
+  people.forEach(function(p) {
+    const id = "@I" + personId + "@";
+    idMap[((p.given_name||"") + " " + (p.surname||"")).trim()] = id;
+    lines.push("0 " + id + " INDI");
+    lines.push("1 NAME " + (p.given_name||"") + " /" + (p.surname||"") + "/");
+    if (p.gender) lines.push("1 SEX " + p.gender);
+    if (p.birth_date || p.birth_place) {
+      lines.push("1 BIRT");
+      if (p.birth_date)  lines.push("2 DATE " + gedcomDate(p.birth_date));
+      if (p.birth_place) lines.push("2 PLAC " + p.birth_place);
+    }
+    if (p.death_date || p.death_place) {
+      lines.push("1 DEAT");
+      if (p.death_date)  lines.push("2 DATE " + gedcomDate(p.death_date));
+      if (p.death_place) lines.push("2 PLAC " + p.death_place);
+    }
+    if (p.notes) lines.push("1 NOTE " + p.notes);
+    personId++;
+  });
+
+  families.forEach(function(f) {
+    lines.push("0 @F" + familyId + "@ FAM");
+    if (f.husband) {
+      const hname = ((f.husband.given_name||"") + " " + (f.husband.surname||"")).trim();
+      if (idMap[hname]) lines.push("1 HUSB " + idMap[hname]);
+    }
+    if (f.wife) {
+      const wname = ((f.wife.given_name||"") + " " + (f.wife.surname||"")).trim();
+      if (idMap[wname]) lines.push("1 WIFE " + idMap[wname]);
+    }
+    if (f.marriage_date || f.marriage_place) {
+      lines.push("1 MARR");
+      if (f.marriage_date)  lines.push("2 DATE " + gedcomDate(f.marriage_date));
+      if (f.marriage_place) lines.push("2 PLAC " + f.marriage_place);
+    }
+    if (f.children) {
+      f.children.forEach(function(c) {
+        const cname = ((c.given_name||"") + " " + (c.surname||"")).trim();
+        if (idMap[cname]) lines.push("1 CHIL " + idMap[cname]);
+      });
+    }
+    familyId++;
+  });
+
+  lines.push("0 TRLR");
+
+  const gedcom = lines.join("\n");
+  return { result: "<pre style='font-family:monospace;font-size:12px;background:#f4f4f0;padding:10px;border:1px solid #ccc;max-width:520px;overflow-x:auto;'>" + escapeHtml(gedcom) + "</pre>" };
+}
+
+// ---------------------------------------------------------------------------
+// Entry point — required by AI Edge Gallery
+// ---------------------------------------------------------------------------
+
 window.ai_edge_gallery_get_result = async function(dataStr, secret) {
-  return JSON.stringify({ result: "<p>Skill is working. Action received: " + JSON.parse(dataStr).action + "</p>" });
+  try {
+    const data   = JSON.parse(dataStr);
+    const action = data.action;
+
+    switch (action) {
+      case "record_person":   return JSON.stringify(recordPerson(data));
+      case "family_group":    return JSON.stringify(familyGroup(data));
+      case "format_citation": return JSON.stringify(formatCitation(data));
+      case "research_log":    return JSON.stringify(researchLog(data));
+      case "export_gedcom":   return JSON.stringify(exportGedcom(data));
+      default:
+        return JSON.stringify({ result: "<p style='color:#a00;font-family:sans-serif;'>Unknown action: " + escapeHtml(action) + "</p>" });
+    }
+  } catch(e) {
+    return JSON.stringify({ result: "<div style='font-family:sans-serif;border:1px solid #c00;padding:10px;background:#fff5f5;'><strong>Error:</strong> " + escapeHtml(e.message) + "</div>" });
+  }
 };
 </script>
 </body>

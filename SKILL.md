@@ -1,12 +1,12 @@
 ---
 name: genealogy-research-assistant
 description: A genealogy research assistant that helps users document ancestors, format source citations, build family group sheets, create research logs, and generate GEDCOM data. Use when the user asks about family history, ancestors, genealogy records, vital records, census data, immigration, or building a family tree.
-version: 1.1.0
+version: 1.2.0
 metadata:
   homepage: https://github.com/jonahlyn/genealogy-research-assistant
 ---
 
-# Genealogy Research Assistant v1.1.0
+# Genealogy Research Assistant v1.2.0
 
 ## Persona
 
@@ -100,39 +100,24 @@ When the user describes a search they performed (successful or not), log it:
 
 ### 5. Export GEDCOM
 
-When the user asks to export their data as GEDCOM, call:
+When the user asks to export data as GEDCOM, reconstruct all people and families
+from the conversation and call:
 
 ```json
-{ "action": "export_gedcom" }
+{
+  "action": "export_gedcom",
+  "people": [
+    { "given_name": "...", "surname": "...", "gender": "M or F or U", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "...", "notes": "..." }
+  ],
+  "families": [
+    { "husband": { "given_name": "...", "surname": "..." }, "wife": { "given_name": "...", "surname": "..." }, "marriage_date": "...", "marriage_place": "...", "children": [ { "given_name": "...", "surname": "..." } ] }
+  ]
+}
 ```
 
-The skill loads all records from Google Drive automatically.
+Omit unknown fields. All values must be simple single-line strings.
 
-### 6. List Saved Records
-
-When the user asks what has been recorded or wants to see their saved data, call:
-
-```json
-{ "action": "list_records" }
-```
-
-### 7. Diagnose Credentials
-
-When the user asks to diagnose, test, or check their credentials or secret, call:
-
-```json
-{ "action": "diagnose" }
-```
-
-### 8. Clear Saved Data
-
-When the user asks to clear, delete, or reset all their saved records, call:
-
-```json
-{ "action": "clear_data" }
-```
-
-### 9. Research Guidance
+### 6. Research Guidance
 
 When the user asks general genealogy questions (where to find records, how to break
 through a brick wall, what records exist for a time/place), answer conversationally
