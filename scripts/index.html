@@ -42,12 +42,72 @@ function gedcomDate(raw) {
 }
 
 // ---------------------------------------------------------------------------
+// Storage
+// ---------------------------------------------------------------------------
+
+var STORAGE_KEY_PEOPLE   = "genealogy_people";
+var STORAGE_KEY_FAMILIES = "genealogy_families";
+
+function storageAvailable() {
+  try {
+    var t = "__test__";
+    localStorage.setItem(t, t);
+    localStorage.removeItem(t);
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function loadPeople() {
+  if (!storageAvailable()) return [];
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_PEOPLE) || "[]"); }
+  catch(e) { return []; }
+}
+
+function loadFamilies() {
+  if (!storageAvailable()) return [];
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY_FAMILIES) || "[]"); }
+  catch(e) { return []; }
+}
+
+function savePerson(person) {
+  if (!storageAvailable()) return;
+  var people = loadPeople();
+  // Update existing record if same full name, otherwise append
+  var key = ((person.given_name || "") + " " + (person.surname || "")).trim().toLowerCase();
+  var idx = people.findIndex(function(p) {
+    return ((p.given_name || "") + " " + (p.surname || "")).trim().toLowerCase() === key;
+  });
+  if (idx >= 0) { people[idx] = person; } else { people.push(person); }
+  localStorage.setItem(STORAGE_KEY_PEOPLE, JSON.stringify(people));
+}
+
+function saveFamily(family) {
+  if (!storageAvailable()) return;
+  var families = loadFamilies();
+  // Identify family by husband+wife names
+  var hname = family.husband ? ((family.husband.given_name||"") + " " + (family.husband.surname||"")).trim().toLowerCase() : "";
+  var wname = family.wife   ? ((family.wife.given_name||"")   + " " + (family.wife.surname||"")).trim().toLowerCase()   : "";
+  var idx = families.findIndex(function(f) {
+    var fh = f.husband ? ((f.husband.given_name||"") + " " + (f.husband.surname||"")).trim().toLowerCase() : "";
+    var fw = f.wife    ? ((f.wife.given_name||"")    + " " + (f.wife.surname||"")).trim().toLowerCase()    : "";
+    return fh === hname && fw === wname;
+  });
+  if (idx >= 0) { families[idx] = family; } else { families.push(family); }
+  localStorage.setItem(STORAGE_KEY_FAMILIES, JSON.stringify(families));
+}
+
+// ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
 
 function recordPerson(data) {
-  const name = (data.given_name || "") + " " + (data.surname || "");
-  let html = "<div style='font-family:serif;border:1px solid #888;padding:12px;max-width:400px;'>";
+  savePerson(data);
+
+  var stored = storageAvailable();
+  var name = (data.given_name || "") + " " + (data.surname || "");
+  var html = "<div style='font-family:serif;border:1px solid #888;padding:12px;max-width:400px;'>";
   html += "<h3 style='margin:0 0 8px 0;border-bottom:2px solid #333;padding-bottom:4px;'>" + escapeHtml(name.trim()) + "</h3>";
   html += "<table style='font-size:14px;width:100%;'>";
   if (data.birth_date || data.birth_place) {
@@ -61,23 +121,36 @@ function recordPerson(data) {
     html += "</td></tr>";
   }
   if (data.gender) {
-    const g = data.gender === "M" ? "Male" : data.gender === "F" ? "Female" : "Unknown";
+    var g = data.gender === "M" ? "Male" : data.gender === "F" ? "Female" : "Unknown";
     html += "<tr><td style='font-weight:bold;'>Gender:</td><td>" + g + "</td></tr>";
   }
   if (data.notes) {
     html += "<tr><td style='font-weight:bold;'>Notes:</td><td>" + escapeHtml(data.notes) + "</td></tr>";
   }
-  html += "</table></div>";
+  html += "</table>";
+  html += "<p style='margin:8px 0 0 0;font-size:11px;color:" + (stored ? "#080" : "#a00") + ";'>";
+  html += stored ? "Saved to device storage." : "Storage unavailable — not persisted.";
+  html += "</p>";
+  html += "</div>";
   return { result: html };
 }
 
 function familyGroup(data) {
-  let html = "<div style='font-family:serif;border:2px solid #444;padding:14px;max-width:520px;'>";
+  saveFamily(data);
+  // Also save husband and wife as individual people
+  if (data.husband) savePerson(data.husband);
+  if (data.wife)    savePerson(data.wife);
+  if (data.children) {
+    data.children.forEach(function(c) { savePerson(c); });
+  }
+
+  var stored = storageAvailable();
+  var html = "<div style='font-family:serif;border:2px solid #444;padding:14px;max-width:520px;'>";
   html += "<h2 style='text-align:center;margin:0 0 10px 0;'>Family Group Sheet</h2>";
 
   function personBlock(label, p) {
     if (!p) return "";
-    let s = "<h4 style='margin:8px 0 4px 0;border-bottom:1px solid #aaa;'>" + label + "</h4>";
+    var s = "<h4 style='margin:8px 0 4px 0;border-bottom:1px solid #aaa;'>" + label + "</h4>";
     s += "<table style='font-size:13px;width:100%;'>";
     s += "<tr><td style='font-weight:bold;width:80px;'>Name:</td><td>" + escapeHtml((p.given_name||"") + " " + (p.surname||"")) + "</td></tr>";
     if (p.birth_date) s += "<tr><td style='font-weight:bold;'>Born:</td><td>" + escapeHtml(formatDate(p.birth_date)) + (p.birth_place ? " — " + escapeHtml(p.birth_place) : "") + "</td></tr>";
@@ -107,13 +180,16 @@ function familyGroup(data) {
     html += "</ol>";
   }
 
+  html += "<p style='margin:8px 0 0 0;font-size:11px;color:" + (stored ? "#080" : "#a00") + ";'>";
+  html += stored ? "Saved to device storage." : "Storage unavailable — not persisted.";
+  html += "</p>";
   html += "</div>";
   return { result: html };
 }
 
 function formatCitation(data) {
   // Follows Evidence Explained style (Mills) loosely adapted for common source types
-  let parts = [];
+  var parts = [];
 
   if (data.author) parts.push(escapeHtml(data.author));
   if (data.title) parts.push('"' + escapeHtml(data.title) + '"');
@@ -123,11 +199,11 @@ function formatCitation(data) {
   if (data.url) parts.push(escapeHtml(data.url));
   if (data.date_accessed) parts.push("accessed " + escapeHtml(formatDate(data.date_accessed)));
 
-  const citation = parts.join("; ") + ".";
+  var citation = parts.join("; ") + ".";
 
-  const typeLabel = (data.source_type || "source").replace(/_/g, " ");
+  var typeLabel = (data.source_type || "source").replace(/_/g, " ");
 
-  let html = "<div style='font-family:serif;border-left:4px solid #555;padding:8px 12px;max-width:500px;background:#fafaf5;'>";
+  var html = "<div style='font-family:serif;border-left:4px solid #555;padding:8px 12px;max-width:500px;background:#fafaf5;'>";
   html += "<p style='margin:0 0 4px 0;font-size:11px;text-transform:uppercase;color:#666;'>" + escapeHtml(typeLabel) + "</p>";
   html += "<p style='margin:0;font-size:14px;'>" + citation + "</p>";
   html += "</div>";
@@ -135,10 +211,10 @@ function formatCitation(data) {
 }
 
 function researchLog(data) {
-  let html = "<div style='font-family:sans-serif;border:1px solid #bbb;padding:10px;max-width:500px;background:#fffff8;'>";
+  var html = "<div style='font-family:sans-serif;border:1px solid #bbb;padding:10px;max-width:500px;background:#fffff8;'>";
   html += "<h4 style='margin:0 0 6px 0;'>Research Log Entry</h4>";
   html += "<table style='font-size:13px;width:100%;border-collapse:collapse;'>";
-  const rows = [
+  var rows = [
     ["Date", data.date],
     ["Ancestor", data.ancestor],
     ["Repository / Source", data.repository_or_source],
@@ -157,7 +233,13 @@ function researchLog(data) {
 }
 
 function exportGedcom(data) {
-  let lines = [];
+  // Use stored data, falling back to any data passed directly
+  var people   = loadPeople();
+  var families = loadFamilies();
+  if (people.length === 0)   people   = data.people   || [];
+  if (families.length === 0) families = data.families || [];
+
+  var lines = [];
   lines.push("0 HEAD");
   lines.push("1 SOUR AI_Edge_Genealogy_Skill");
   lines.push("1 GEDC");
@@ -165,65 +247,109 @@ function exportGedcom(data) {
   lines.push("2 FORM LINEAGE-LINKED");
   lines.push("1 CHAR UTF-8");
 
-  let personId = 1;
-  let familyId = 1;
-  const idMap = {};
+  var personId = 1;
+  var familyId = 1;
+  var idMap = {};
 
   // Individuals
-  if (data.people && data.people.length > 0) {
-    data.people.forEach(function(p) {
-      const id = "@I" + personId + "@";
-      idMap[((p.given_name||"") + " " + (p.surname||"")).trim()] = id;
-      lines.push("0 " + id + " INDI");
-      lines.push("1 NAME " + (p.given_name || "") + " /" + (p.surname || "") + "/");
-      if (p.gender) lines.push("1 SEX " + p.gender);
-      if (p.birth_date || p.birth_place) {
-        lines.push("1 BIRT");
-        if (p.birth_date) lines.push("2 DATE " + gedcomDate(p.birth_date));
-        if (p.birth_place) lines.push("2 PLAC " + p.birth_place);
-      }
-      if (p.death_date || p.death_place) {
-        lines.push("1 DEAT");
-        if (p.death_date) lines.push("2 DATE " + gedcomDate(p.death_date));
-        if (p.death_place) lines.push("2 PLAC " + p.death_place);
-      }
-      if (p.notes) lines.push("1 NOTE " + p.notes);
-      personId++;
-    });
-  }
+  people.forEach(function(p) {
+    var id = "@I" + personId + "@";
+    idMap[((p.given_name||"") + " " + (p.surname||"")).trim()] = id;
+    lines.push("0 " + id + " INDI");
+    lines.push("1 NAME " + (p.given_name || "") + " /" + (p.surname || "") + "/");
+    if (p.gender) lines.push("1 SEX " + p.gender);
+    if (p.birth_date || p.birth_place) {
+      lines.push("1 BIRT");
+      if (p.birth_date) lines.push("2 DATE " + gedcomDate(p.birth_date));
+      if (p.birth_place) lines.push("2 PLAC " + p.birth_place);
+    }
+    if (p.death_date || p.death_place) {
+      lines.push("1 DEAT");
+      if (p.death_date) lines.push("2 DATE " + gedcomDate(p.death_date));
+      if (p.death_place) lines.push("2 PLAC " + p.death_place);
+    }
+    if (p.notes) lines.push("1 NOTE " + p.notes);
+    personId++;
+  });
 
   // Families
-  if (data.families && data.families.length > 0) {
-    data.families.forEach(function(f) {
-      const fid = "@F" + familyId + "@";
-      lines.push("0 " + fid + " FAM");
-      if (f.husband) {
-        const hname = ((f.husband.given_name||"") + " " + (f.husband.surname||"")).trim();
-        if (idMap[hname]) lines.push("1 HUSB " + idMap[hname]);
-      }
-      if (f.wife) {
-        const wname = ((f.wife.given_name||"") + " " + (f.wife.surname||"")).trim();
-        if (idMap[wname]) lines.push("1 WIFE " + idMap[wname]);
-      }
-      if (f.marriage_date || f.marriage_place) {
-        lines.push("1 MARR");
-        if (f.marriage_date) lines.push("2 DATE " + gedcomDate(f.marriage_date));
-        if (f.marriage_place) lines.push("2 PLAC " + f.marriage_place);
-      }
-      if (f.children) {
-        f.children.forEach(function(c) {
-          const cname = ((c.given_name||"") + " " + (c.surname||"")).trim();
-          if (idMap[cname]) lines.push("1 CHIL " + idMap[cname]);
-        });
-      }
-      familyId++;
-    });
-  }
+  families.forEach(function(f) {
+    var fid = "@F" + familyId + "@";
+    lines.push("0 " + fid + " FAM");
+    if (f.husband) {
+      var hname = ((f.husband.given_name||"") + " " + (f.husband.surname||"")).trim();
+      if (idMap[hname]) lines.push("1 HUSB " + idMap[hname]);
+    }
+    if (f.wife) {
+      var wname = ((f.wife.given_name||"") + " " + (f.wife.surname||"")).trim();
+      if (idMap[wname]) lines.push("1 WIFE " + idMap[wname]);
+    }
+    if (f.marriage_date || f.marriage_place) {
+      lines.push("1 MARR");
+      if (f.marriage_date) lines.push("2 DATE " + gedcomDate(f.marriage_date));
+      if (f.marriage_place) lines.push("2 PLAC " + f.marriage_place);
+    }
+    if (f.children) {
+      f.children.forEach(function(c) {
+        var cname = ((c.given_name||"") + " " + (c.surname||"")).trim();
+        if (idMap[cname]) lines.push("1 CHIL " + idMap[cname]);
+      });
+    }
+    familyId++;
+  });
 
   lines.push("0 TRLR");
 
-  const gedcom = lines.join("\n");
+  if (people.length === 0) {
+    return { result: "<p style='font-family:sans-serif;color:#a00;'>No records found. Record some people first.</p>" };
+  }
+
+  var gedcom = lines.join("\n");
   return { result: "<pre style='font-family:monospace;font-size:12px;background:#f4f4f0;padding:10px;border:1px solid #ccc;max-width:520px;overflow-x:auto;'>" + escapeHtml(gedcom) + "</pre>" };
+}
+
+function listRecords() {
+  var people   = loadPeople();
+  var families = loadFamilies();
+
+  if (people.length === 0 && families.length === 0) {
+    return { result: "<p style='font-family:sans-serif;'>No records saved yet.</p>" };
+  }
+
+  var html = "<div style='font-family:sans-serif;font-size:13px;max-width:480px;'>";
+
+  if (people.length > 0) {
+    html += "<h4 style='margin:0 0 6px 0;'>People (" + people.length + ")</h4><ul style='margin:0 0 10px 0;padding-left:18px;'>";
+    people.forEach(function(p) {
+      html += "<li>" + escapeHtml(((p.given_name||"") + " " + (p.surname||"")).trim());
+      if (p.birth_date) html += " (b. " + escapeHtml(formatDate(p.birth_date)) + ")";
+      html += "</li>";
+    });
+    html += "</ul>";
+  }
+
+  if (families.length > 0) {
+    html += "<h4 style='margin:0 0 6px 0;'>Families (" + families.length + ")</h4><ul style='margin:0;padding-left:18px;'>";
+    families.forEach(function(f) {
+      var h = f.husband ? ((f.husband.given_name||"") + " " + (f.husband.surname||"")).trim() : "?";
+      var w = f.wife    ? ((f.wife.given_name||"")    + " " + (f.wife.surname||"")).trim()    : "?";
+      html += "<li>" + escapeHtml(h) + " &amp; " + escapeHtml(w);
+      if (f.marriage_date) html += " (m. " + escapeHtml(formatDate(f.marriage_date)) + ")";
+      html += "</li>";
+    });
+    html += "</ul>";
+  }
+
+  html += "</div>";
+  return { result: html };
+}
+
+function clearData() {
+  if (storageAvailable()) {
+    localStorage.removeItem(STORAGE_KEY_PEOPLE);
+    localStorage.removeItem(STORAGE_KEY_FAMILIES);
+  }
+  return { result: "<p style='font-family:sans-serif;'>All saved records have been cleared.</p>" };
 }
 
 // ---------------------------------------------------------------------------
@@ -232,20 +358,17 @@ function exportGedcom(data) {
 
 window.ai_edge_gallery_get_result = async function(dataStr) {
   try {
-    const data = JSON.parse(dataStr);
-    const action = data.action;
+    var data = JSON.parse(dataStr);
+    var action = data.action;
 
     switch (action) {
-      case "record_person":
-        return JSON.stringify(recordPerson(data));
-      case "family_group":
-        return JSON.stringify(familyGroup(data));
-      case "format_citation":
-        return JSON.stringify(formatCitation(data));
-      case "research_log":
-        return JSON.stringify(researchLog(data));
-      case "export_gedcom":
-        return JSON.stringify(exportGedcom(data));
+      case "record_person":    return JSON.stringify(recordPerson(data));
+      case "family_group":     return JSON.stringify(familyGroup(data));
+      case "format_citation":  return JSON.stringify(formatCitation(data));
+      case "research_log":     return JSON.stringify(researchLog(data));
+      case "export_gedcom":    return JSON.stringify(exportGedcom(data));
+      case "list_records":     return JSON.stringify(listRecords());
+      case "clear_data":       return JSON.stringify(clearData());
       default:
         return JSON.stringify({ error: "Unknown action: " + action });
     }
