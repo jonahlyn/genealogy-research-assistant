@@ -438,10 +438,10 @@ window.ai_edge_gallery_get_result = async function(dataStr, secret) {
       case "list_records":   return JSON.stringify(await listRecords(accessToken));
       case "clear_data":     return JSON.stringify(await clearData(accessToken));
       default:
-        return JSON.stringify({ error: "Unknown action: " + action });
+        return JSON.stringify({ result: "<p style='color:#a00;font-family:sans-serif;'>Unknown action: " + escapeHtml(action) + "</p>" });
     }
   } catch(e) {
-    return JSON.stringify({ error: e.message });
+    return JSON.stringify({ result: "<div style='font-family:sans-serif;border:1px solid #c00;padding:10px;max-width:480px;background:#fff5f5;'><strong>Error:</strong> " + escapeHtml(e.message) + "</div>" });
   }
 };
 </script>
