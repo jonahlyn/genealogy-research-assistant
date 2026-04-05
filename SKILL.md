@@ -50,8 +50,8 @@ collect the following and call the JavaScript skill:
 ```json
 {
   "action": "family_group",
-  "husband": { "given_name": "...", "surname": "...", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "..." },
-  "wife": { "given_name": "...", "surname": "...", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "..." },
+  "husband": { "given_name": "...", "surname": "..." },
+  "wife": { "given_name": "...", "surname": "..." },
   "marriage_date": "...",
   "marriage_place": "...",
   "children": [
@@ -60,7 +60,7 @@ collect the following and call the JavaScript skill:
 }
 ```
 
-Omit any fields that are unknown — do not include keys with null or empty values.
+Also include `birth_date`, `birth_place`, `death_date`, and `death_place` inside `husband` and `wife` if the user provides them. Omit any fields that are unknown.
 
 ### 3. Format a Source Citation
 
