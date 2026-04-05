@@ -4,8 +4,6 @@ description: A genealogy research assistant that helps users document ancestors,
 version: 1.1.0
 metadata:
   homepage: https://github.com/jonahlyn/genealogy-research-assistant
-  require-secret: true
-  require-secret-description: "Google Drive credentials as JSON: {\"client_id\":\"...\",\"client_secret\":\"...\",\"refresh_token\":\"...\"} — see the README for setup instructions."
 ---
 
 # Genealogy Research Assistant v1.1.0
