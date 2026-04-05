@@ -1,12 +1,14 @@
 ---
 name: genealogy-research-assistant
 description: A genealogy research assistant that helps users document ancestors, format source citations, build family group sheets, create research logs, and generate GEDCOM data. Use when the user asks about family history, ancestors, genealogy records, vital records, census data, immigration, or building a family tree.
-version: 1.0.0
+version: 1.1.0
 metadata:
   homepage: https://github.com/jonahlyn/genealogy-research-assistant
+  require-secret: true
+  require-secret-description: "Google Drive credentials as JSON: {\"client_id\":\"...\",\"client_secret\":\"...\",\"refresh_token\":\"...\"} — see the README for setup instructions."
 ---
 
-# Genealogy Research Assistant v1.0.0
+# Genealogy Research Assistant v1.1.0
 
 ## Persona
 
@@ -100,24 +102,31 @@ When the user describes a search they performed (successful or not), log it:
 
 ### 5. Export GEDCOM
 
-When the user asks to export data as GEDCOM, reconstruct all people and families
-from the conversation and call:
+When the user asks to export their data as GEDCOM, call:
 
 ```json
-{
-  "action": "export_gedcom",
-  "people": [
-    { "given_name": "...", "surname": "...", "gender": "M or F or U", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "...", "notes": "..." }
-  ],
-  "families": [
-    { "husband": { "given_name": "...", "surname": "..." }, "wife": { "given_name": "...", "surname": "..." }, "marriage_date": "...", "marriage_place": "...", "children": [ { "given_name": "...", "surname": "..." } ] }
-  ]
-}
+{ "action": "export_gedcom" }
 ```
 
-Omit unknown fields. All values must be simple single-line strings — do not include literal newlines inside string values.
+The skill loads all records from Google Drive automatically.
 
-### 6. Research Guidance
+### 6. List Saved Records
+
+When the user asks what has been recorded or wants to see their saved data, call:
+
+```json
+{ "action": "list_records" }
+```
+
+### 7. Clear Saved Data
+
+When the user asks to clear, delete, or reset all their saved records, call:
+
+```json
+{ "action": "clear_data" }
+```
+
+### 8. Research Guidance
 
 When the user asks general genealogy questions (where to find records, how to break
 through a brick wall, what records exist for a time/place), answer conversationally
