@@ -99,15 +99,22 @@ When the user describes a search they performed (successful or not), log it:
 
 ### 5. Export GEDCOM
 
-When the user asks to export data for one or more people, call:
+When the user asks to export data for one or more people, reconstruct the
+people from the conversation and call:
 
 ```json
 {
   "action": "export_gedcom",
-  "people": [ ...array of person objects... ],
-  "families": [ ...array of family objects... ]
+  "people": [
+    { "given_name": "...", "surname": "...", "gender": "M or F or U", "birth_date": "...", "birth_place": "...", "death_date": "...", "death_place": "...", "notes": "..." }
+  ],
+  "families": [
+    { "husband": { "given_name": "...", "surname": "..." }, "wife": { "given_name": "...", "surname": "..." }, "marriage_date": "...", "marriage_place": "...", "children": [ { "given_name": "...", "surname": "..." } ] }
+  ]
 }
 ```
+
+Omit unknown fields. All values must be simple single-line strings — do not include literal newlines inside string values.
 
 ### 6. Research Guidance
 
