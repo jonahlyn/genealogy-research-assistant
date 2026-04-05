@@ -219,7 +219,7 @@ function webviewResult(html) {
   const encoded = btoa(encodeURIComponent(html).replace(/%([0-9A-F]{2})/g, function(m, p) {
     return String.fromCharCode("0x" + p);
   }));
-  const url = "https://jonahlyn.github.io/genealogy-research-assistant/viewer.html?content=" + encoded;
+  const url = "https://jonahlyn.github.io/genealogy-research-assistant/viewer.html?content=" + encodeURIComponent(encoded);
   return { webview: { iframe: true, url: url } };
 }
 
